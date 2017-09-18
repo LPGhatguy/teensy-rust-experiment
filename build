@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+BIN=teensy-rs
+OUTDIR=target/thumbv7em-none-eabi/release
+HEX=$OUTDIR/$BIN.HEX
+ELF=$OUTDIR/$BIN
+
+xargo build --target=thumbv7em-none-eabi --release
+arm-none-eabi-objcopy -O ihex $ELF $HEX
+teensy_loader_cli -w -mmcu=mk66fx1m0 $HEX -v
