@@ -1,5 +1,6 @@
 use core;
 use volatile::Volatile;
+use bit_field::BitField;
 
 #[repr(C, packed)]
 pub struct Watchdog {
@@ -32,9 +33,7 @@ impl Watchdog {
 		}
 
 		self.stctrlh.update(|ctrl| {
-			// using bit_field's .set_bit method is supposed to work here
-			// it doesn't, dunno why.
-			*ctrl = *ctrl & !(0x00000001);
+			ctrl.set_bit(0, false);
 		});
 	}
 }
