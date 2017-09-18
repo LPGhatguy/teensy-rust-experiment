@@ -43,6 +43,24 @@ fn delay(cycles: usize) {
 	}
 }
 
+fn yep(gpio: &mut port::Gpio) {
+	gpio.high();
+	delay(1_200_000);
+	gpio.low();
+}
+
+fn nope(gpio: &mut port::Gpio) {
+	gpio.high();
+	delay(172_000);
+	gpio.low();
+
+	delay(640_000);
+
+	gpio.high();
+	delay(172_000);
+	gpio.low();
+}
+
 #[no_mangle]
 pub extern fn main() {
 	let (wdog, sim, pin, osc, mcg) = unsafe {(
@@ -55,25 +73,27 @@ pub extern fn main() {
 
 	wdog.disable();
 
-	// enable crsytal oscillator with 10pf of capacitance
 	osc.enable(10);
 
 	sim.enable_clock(sim::Clock::PortC);
 
-	let mut fei = mcg::Fei {
-		mcg
-	};
+	sim.set_dividers(1, 2, 3);
 
-	fei.enable_external(mcg::OscRange::VeryHigh);
-
-	let fbe = fei.to_fbe(512);
+	mcg.fei_to_pee_120mhz();
 
 	let mut gpio = pin.make_gpio();
 
 	gpio.output();
 
-	loop {
-		gpio.toggle();
-		delay(1720000);
+	{
+		use bit_field::BitField;
+
+		if mcg.c1.read().get_bits(3..6) == 0b100 {
+			yep(&mut gpio);
+		} else {
+			nope(&mut gpio);
+		}
 	}
+
+	loop {}
 }

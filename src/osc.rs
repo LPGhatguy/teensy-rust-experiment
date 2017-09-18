@@ -2,7 +2,9 @@ use volatile::Volatile;
 use bit_field::BitField;
 
 pub struct Osc {
-	cr: Volatile<u8>
+	cr: Volatile<u8>,
+	_pad0: u8,
+	div: Volatile<u8>,
 }
 
 impl Osc {
@@ -17,7 +19,7 @@ impl Osc {
 
 		let mut cr: u8 = 0;
 
-		// TODO: verify this values for teensy 3.6?
+		// TODO: verify these values for teensy 3.6?
 
 		// The capacitance control bits are backwards, and start at 2pf
 		// We swizzle them all here
