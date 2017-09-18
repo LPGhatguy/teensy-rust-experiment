@@ -2,8 +2,18 @@ use core;
 use volatile::Volatile;
 use bit_field::BitField;
 
+pub const PORT_B: usize = 0x4004A000;
+pub const PORT_B_BITBAND: usize = 0x43FE0800;
+
+pub const PORT_C: usize = 0x4004B000;
+pub const PORT_C_BITBAND: usize = 0x43FE1000;
+
+pub struct Tx(u8);
+pub struct Rx(u8);
+
 pub enum PortName {
-	C
+	B,
+	C,
 }
 
 #[repr(C, packed)]
@@ -18,7 +28,8 @@ pub struct Port {
 impl Port {
 	pub unsafe fn new(name: PortName) -> &'static mut Port {
 		&mut * match name {
-			PortName::C => 0x4004B000 as *mut Port
+			PortName::B => PORT_B as *mut Port,
+			PortName::C => PORT_C as *mut Port,
 		}
 	}
 
@@ -60,9 +71,10 @@ pub struct Gpio {
 
 impl Port {
 	pub fn name(&self) -> PortName {
-		let addr = (self as *const Port) as u32;
+		let addr = (self as *const Port) as usize;
 		match addr {
-			0x4004B000 => PortName::C,
+			PORT_B => PortName::B,
+			PORT_C => PortName::C,
 			_ => unreachable!(),
 		}
 	}
@@ -76,12 +88,41 @@ impl Pin {
 			Gpio::new(port.name(), self.pin)
 		}
 	}
+
+	pub fn make_rx(self) -> Rx {
+		unsafe {
+			let port = &mut *self.port;
+
+			match (port.name(), self.pin) {
+				(PortName::B, 16) => {
+					port.set_pin_mode(self.pin, 3);
+					Rx(0)
+				},
+				_ => panic!("Invalid serial RX pin!"),
+			}
+		}
+	}
+
+	pub fn make_tx(self) -> Tx {
+		unsafe {
+			let port = &mut *self.port;
+
+			match (port.name(), self.pin) {
+				(PortName::B, 17) => {
+					port.set_pin_mode(self.pin, 3);
+					Tx(0)
+				},
+				_ => panic!("Invalid serial RX pin!"),
+			}
+		}
+	}
 }
 
 impl Gpio {
 	pub unsafe fn new(port: PortName, pin: usize) -> Gpio {
 		let gpio = match port {
-			PortName::C => 0x43FE1000 as *mut GpioBitband,
+			PortName::C => PORT_C_BITBAND as *mut GpioBitband,
+			PortName::B => PORT_B_BITBAND as *mut GpioBitband,
 		};
 
 		Gpio {
