@@ -57,9 +57,7 @@ pub extern fn main() {
 	gpio.output();
 
 	loop {
-		gpio.low();
-		delay(1720000);
-		gpio.high();
+		gpio.toggle();
 		delay(1720000);
 	}
 }

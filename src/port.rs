@@ -45,12 +45,12 @@ impl Port {
 
 #[repr(C, packed)]
 struct GpioBitband {
-	pdor: [Volatile<u32>; 32],
-	psor: [Volatile<u32>; 32],
-	pcor: [Volatile<u32>; 32],
-	ptor: [Volatile<u32>; 32],
-	pdir: [Volatile<u32>; 32],
-	pddr: [Volatile<u32>; 32]
+	pdor: [Volatile<u32>; 32], // data output
+	psor: [Volatile<u32>; 32], // set output
+	pcor: [Volatile<u32>; 32], // clear output
+	ptor: [Volatile<u32>; 32], // toggle output
+	pdir: [Volatile<u32>; 32], // data input
+	pddr: [Volatile<u32>; 32], // data direction
 }
 
 pub struct Gpio {
@@ -100,13 +100,21 @@ impl Gpio {
 
 	pub fn high(&mut self) {
 		unsafe {
-			(*self.gpio).psor[self.pin].update(|psor| {
-				*psor = 1;
+			(*self.gpio).pdor[self.pin].update(|pdor| {
+				*pdor = 1;
 			});
 		}
 	}
 
 	pub fn low(&mut self) {
+		unsafe {
+			(*self.gpio).pdor[self.pin].update(|pdor| {
+				*pdor = 0;
+			});
+		}
+	}
+
+	pub fn toggle(&mut self) {
 		unsafe {
 			(*self.gpio).ptor[self.pin].update(|ptor| {
 				*ptor = 1;
