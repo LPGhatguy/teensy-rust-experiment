@@ -8,6 +8,8 @@ extern crate bit_field;
 mod port;
 mod sim;
 mod watchdog;
+mod mcg;
+mod osc;
 
 extern {
 	fn _stack_top();
@@ -43,14 +45,28 @@ fn delay(cycles: usize) {
 
 #[no_mangle]
 pub extern fn main() {
-	let (wdog, sim, pin) = unsafe {(
+	let (wdog, sim, pin, osc, mcg) = unsafe {(
 		watchdog::Watchdog::new(),
 		sim::Sim::new(),
-		port::Port::new(port::PortName::C).pin(5)
+		port::Port::new(port::PortName::C).pin(5),
+		osc::Osc::new(),
+		mcg::Mcg::new(),
 	)};
 
 	wdog.disable();
+
+	// enable crsytal oscillator with 10pf of capacitance
+	osc.enable(10);
+
 	sim.enable_clock(sim::Clock::PortC);
+
+	let mut fei = mcg::Fei {
+		mcg
+	};
+
+	fei.enable_external(mcg::OscRange::VeryHigh);
+
+	let fbe = fei.to_fbe(512);
 
 	let mut gpio = pin.make_gpio();
 

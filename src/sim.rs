@@ -1,4 +1,6 @@
 use core;
+use volatile::Volatile;
+use bit_field::BitField;
 
 pub enum Clock {
 	PortC,
@@ -19,7 +21,7 @@ pub struct Sim {
 	sdid: u32,
 	_pad4: [u32; 3],
 	scgc4: u32,
-	scgc5: u32,
+	scgc5: Volatile<u32>,
 	scgc6: u32,
 	scgc7: u32,
 	clkdiv1: u32,
@@ -38,13 +40,11 @@ impl Sim {
 	}
 
 	pub fn enable_clock(&mut self, clock: Clock) {
-		unsafe {
-			match clock {
-				Clock::PortC => {
-					let mut scgc = core::ptr::read_volatile(&self.scgc5);
-					scgc |= 0x00000800;
-					core::ptr::write_volatile(&mut self.scgc5, scgc);
-				}
+		match clock {
+			Clock::PortC => {
+				self.scgc5.update(|scgc5| {
+					*scgc5 |= 0x00000800;
+				})
 			}
 		}
 	}
