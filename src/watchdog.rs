@@ -32,6 +32,8 @@ impl Watchdog {
 		}
 
 		self.stctrlh.update(|ctrl| {
+			// using bit_field's .set_bit method is supposed to work here
+			// it doesn't, dunno why.
 			*ctrl = *ctrl & !(0x00000001);
 		});
 	}
