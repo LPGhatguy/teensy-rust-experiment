@@ -1,4 +1,6 @@
 use core;
+use volatile::Volatile;
+use bit_field::BitField;
 
 pub enum PortName {
 	C
@@ -6,11 +8,11 @@ pub enum PortName {
 
 #[repr(C, packed)]
 pub struct Port {
-	pcr: [u32; 32],
-	gpclr: u32,
-	gpchr: u32,
+	pcr: [Volatile<u32>; 32],
+	gpclr: Volatile<u32>,
+	gpchr: Volatile<u32>,
 	reserved_0: [u8; 24],
-	isfr: u32,
+	isfr: Volatile<u32>,
 }
 
 impl Port {
@@ -21,12 +23,12 @@ impl Port {
 	}
 
 	pub unsafe fn set_pin_mode(&mut self, p: usize, mut mode: u32) {
-		let mut pcr = core::ptr::read_volatile(&self.pcr[p]);
-		pcr &= 0xFFFFF8FF;
-		mode &= 0x00000007;
-		mode <<= 8;
-		pcr |= mode;
-		core::ptr::write_volatile(&mut self.pcr[p], pcr);
+		self.pcr[p].update(|pcr| {
+			*pcr &= 0xFFFFF8FF;
+			mode &= 0x00000007;
+			mode <<= 8;
+			*pcr |= mode;
+		});
 	}
 }
 
@@ -43,12 +45,12 @@ impl Port {
 
 #[repr(C, packed)]
 struct GpioBitband {
-	pdor: [u32; 32],
-	psor: [u32; 32],
-	pcor: [u32; 32],
-	ptor: [u32; 32],
-	pdir: [u32; 32],
-	pddr: [u32; 32]
+	pdor: [Volatile<u32>; 32],
+	psor: [Volatile<u32>; 32],
+	pcor: [Volatile<u32>; 32],
+	ptor: [Volatile<u32>; 32],
+	pdir: [Volatile<u32>; 32],
+	pddr: [Volatile<u32>; 32]
 }
 
 pub struct Gpio {
@@ -61,7 +63,7 @@ impl Port {
 		let addr = (self as *const Port) as u32;
 		match addr {
 			0x4004B000 => PortName::C,
-			_ => unreachable!()
+			_ => unreachable!(),
 		}
 	}
 }
@@ -79,21 +81,36 @@ impl Pin {
 impl Gpio {
 	pub unsafe fn new(port: PortName, pin: usize) -> Gpio {
 		let gpio = match port {
-			PortName::C => 0x43FE1000 as *mut GpioBitband
+			PortName::C => 0x43FE1000 as *mut GpioBitband,
 		};
 
-		Gpio { gpio: gpio, pin: pin }
+		Gpio {
+			gpio,
+			pin,
+		}
 	}
 
 	pub fn output(&mut self) {
 		unsafe {
-			core::ptr::write_volatile(&mut (*self.gpio).pddr[self.pin], 1);
+			(*self.gpio).pddr[self.pin].update(|pddr| {
+				*pddr = 1;
+			});
 		}
 	}
 
 	pub fn high(&mut self) {
 		unsafe {
-			core::ptr::write_volatile(&mut (*self.gpio).psor[self.pin], 1);
+			(*self.gpio).psor[self.pin].update(|psor| {
+				*psor = 1;
+			});
+		}
+	}
+
+	pub fn low(&mut self) {
+		unsafe {
+			(*self.gpio).ptor[self.pin].update(|ptor| {
+				*ptor = 1;
+			});
 		}
 	}
 }

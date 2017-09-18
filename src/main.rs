@@ -33,6 +33,14 @@ pub extern "C" fn rust_begin_unwind(_msg: core::fmt::Arguments, _file: &'static 
 	loop {};
 }
 
+fn delay(cycles: usize) {
+	unsafe {
+		for i in 0..cycles {
+			asm!("nop" : : : "memory");
+		}
+	}
+}
+
 #[no_mangle]
 pub extern fn main() {
 	let (wdog, sim, pin) = unsafe {(
@@ -47,7 +55,11 @@ pub extern fn main() {
 	let mut gpio = pin.make_gpio();
 
 	gpio.output();
-	gpio.high();
 
-	loop {}
+	loop {
+		gpio.low();
+		delay(1720000);
+		gpio.high();
+		delay(1720000);
+	}
 }
