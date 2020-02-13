@@ -1,8 +1,8 @@
-#![feature(lang_items, asm)]
+#![feature(lang_items, stdsimd)]
 #![no_std]
 #![no_main]
 
-use core::{panic::PanicInfo, ptr};
+use core::{arch::arm::__nop, panic::PanicInfo, ptr};
 
 extern "C" {
     fn _stack_top();
@@ -26,7 +26,7 @@ fn teensy_panic(_info: &PanicInfo) -> ! {
 fn delay(cycles: usize) {
     unsafe {
         for _ in 0..cycles {
-            asm!("nop" : : : "memory");
+            __nop();
         }
     }
 }
@@ -37,6 +37,7 @@ pub extern "C" fn main() {
 
     let portc_pcr5 = 0x4004_B014 as *mut u32;
 
+    let gpioc_pdor = 0x400F_F080 as *mut u32;
     let gpioc_psor = 0x400F_F084 as *mut u32;
     let gpioc_pddr = 0x400F_F094 as *mut u32;
 
@@ -52,10 +53,29 @@ pub extern "C" fn main() {
         ptr::write_volatile(portc_pcr5, value);
     }
 
-    unsafe {
-        ptr::write_volatile(gpioc_pddr, 1 << 5);
-        ptr::write_volatile(gpioc_psor, 1 << 5);
-    }
+    let output = |pin: u8| unsafe {
+        let value = ptr::read_volatile(gpioc_pddr);
+        let mask = 1 << pin;
+        ptr::write_volatile(gpioc_pddr, value | mask);
+    };
+
+    let on = |pin: u8| unsafe {
+        let value = ptr::read_volatile(gpioc_pdor);
+        let mask = 1 << pin;
+        ptr::write_volatile(gpioc_pdor, value | mask);
+    };
+
+    let off = |pin: u8| unsafe {
+        let value = ptr::read_volatile(gpioc_pdor);
+        let mask = 1 << pin;
+        ptr::write_volatile(gpioc_pdor, value & !mask);
+    };
+
+    output(5);
+    on(5);
+
+    output(6);
+    on(6);
 
     loop {}
 }
