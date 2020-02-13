@@ -83,13 +83,12 @@ pub extern "C" fn main() {
     let pin = unsafe { port.pin(5) };
     let mut gpio = pin.make_gpio();
     gpio.output();
-    gpio.high();
+
+    let pin2 = unsafe { port.pin(4) };
+    let mut gpio2 = pin2.make_gpio();
+    gpio2.output();
 
     unsafe {
-        let pin2 = port.pin(4);
-        let mut gpio2 = pin2.make_gpio();
-        gpio2.output();
-
         loop {
             gpio.high();
             gpio2.low();
