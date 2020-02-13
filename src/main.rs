@@ -60,11 +60,11 @@ fn nope(gpio: &mut port::Gpio) {
 
 #[no_mangle]
 pub extern "C" fn main() {
-    let (wdog, sim, pin, osc, mcg) = unsafe {
+    let (wdog, sim, port, osc, mcg) = unsafe {
         (
             watchdog::Watchdog::new(),
             sim::Sim::new(),
-            port::Port::new(port::PortName::C).pin(5),
+            port::Port::new(port::PortName::C),
             osc::Osc::new(),
             mcg::Mcg::new(),
         )
@@ -80,9 +80,25 @@ pub extern "C" fn main() {
 
     // mcg.fei_to_pee_120mhz();
 
+    let pin = unsafe { port.pin(5) };
     let mut gpio = pin.make_gpio();
     gpio.output();
     gpio.high();
+
+    unsafe {
+        let pin2 = port.pin(4);
+        let mut gpio2 = pin2.make_gpio();
+        gpio2.output();
+
+        loop {
+            gpio.high();
+            gpio2.low();
+            delay(500_000);
+            gpio.low();
+            gpio2.high();
+            delay(500_000);
+        }
+    }
 
     // {
     //     use bit_field::BitField;
