@@ -2,16 +2,7 @@
 #![no_std]
 #![no_main]
 
-use core::panic::PanicInfo;
-
-extern crate bit_field;
-extern crate volatile;
-
-mod mcg;
-mod osc;
-mod port;
-mod sim;
-mod watchdog;
+use core::{panic::PanicInfo, ptr};
 
 extern "C" {
     fn _stack_top();
@@ -34,80 +25,37 @@ fn teensy_panic(_info: &PanicInfo) -> ! {
 
 fn delay(cycles: usize) {
     unsafe {
-        for i in 0..cycles {
+        for _ in 0..cycles {
             asm!("nop" : : : "memory");
         }
     }
 }
 
-fn yep(gpio: &mut port::Gpio) {
-    gpio.high();
-    delay(1_200_000);
-    gpio.low();
-}
-
-fn nope(gpio: &mut port::Gpio) {
-    gpio.high();
-    delay(172_000);
-    gpio.low();
-
-    delay(640_000);
-
-    gpio.high();
-    delay(172_000);
-    gpio.low();
-}
-
 #[no_mangle]
 pub extern "C" fn main() {
-    let (wdog, sim, port, osc, mcg) = unsafe {
-        (
-            watchdog::Watchdog::new(),
-            sim::Sim::new(),
-            port::Port::new(port::PortName::C),
-            osc::Osc::new(),
-            mcg::Mcg::new(),
-        )
-    };
+    let sim_scgc5 = 0x4004_8038 as *mut u32;
 
-    wdog.disable();
+    let portc_pcr5 = 0x4004_B014 as *mut u32;
 
-    // osc.enable(10);
-
-    sim.enable_clock(sim::Clock::PortC);
-
-    // sim.set_dividers(1, 2, 3);
-
-    // mcg.fei_to_pee_120mhz();
-
-    let pin = unsafe { port.pin(5) };
-    let mut gpio = pin.make_gpio();
-    gpio.output();
-
-    let pin2 = unsafe { port.pin(4) };
-    let mut gpio2 = pin2.make_gpio();
-    gpio2.output();
+    let gpioc_psor = 0x400F_F084 as *mut u32;
+    let gpioc_pddr = 0x400F_F094 as *mut u32;
 
     unsafe {
-        loop {
-            gpio.high();
-            gpio2.low();
-            delay(500_000);
-            gpio.low();
-            gpio2.high();
-            delay(500_000);
-        }
+        let mut value = ptr::read_volatile(sim_scgc5);
+        value |= 1 << 11;
+        ptr::write_volatile(sim_scgc5, value);
     }
 
-    // {
-    //     use bit_field::BitField;
+    unsafe {
+        let mut value = ptr::read_volatile(portc_pcr5);
+        value |= 1 << 8;
+        ptr::write_volatile(portc_pcr5, value);
+    }
 
-    //     if mcg.c1.read().get_bits(3..6) == 0b100 {
-    //         yep(&mut gpio);
-    //     } else {
-    //         nope(&mut gpio);
-    //     }
-    // }
+    unsafe {
+        ptr::write_volatile(gpioc_pddr, 1 << 5);
+        ptr::write_volatile(gpioc_psor, 1 << 5);
+    }
 
     loop {}
 }
