@@ -33,6 +33,9 @@ fn delay(cycles: usize) {
 
 #[no_mangle]
 pub extern "C" fn main() {
+    let wdog_stctrlh = 0x4005_2000 as *mut u16;
+    let wdog_unlock = 0x4005_200E as *mut u16;
+
     let sim_scgc5 = 0x4004_8038 as *mut u32;
 
     let portc_pcr5 = 0x4004_B014 as *mut u32;
@@ -41,12 +44,27 @@ pub extern "C" fn main() {
     let gpioc_psor = 0x400F_F084 as *mut u32;
     let gpioc_pddr = 0x400F_F094 as *mut u32;
 
+    // disable system watchdog before it kills us
+    unsafe {
+        ptr::write_volatile(wdog_unlock, 0xC520);
+        ptr::write_volatile(wdog_unlock, 0xD928);
+
+        __nop();
+        __nop();
+
+        let value = ptr::read_volatile(wdog_stctrlh);
+        let mask = 1;
+        ptr::write_volatile(wdog_stctrlh, value & !mask);
+    }
+
+    // enable the clock gate on port 5
     unsafe {
         let mut value = ptr::read_volatile(sim_scgc5);
         value |= 1 << 11;
         ptr::write_volatile(sim_scgc5, value);
     }
 
+    // mark port c, pin 5 as GPIO
     unsafe {
         let mut value = ptr::read_volatile(portc_pcr5);
         value |= 1 << 8;
@@ -72,10 +90,13 @@ pub extern "C" fn main() {
     };
 
     output(5);
-    on(5);
 
-    output(6);
-    on(6);
+    loop {
+        on(5);
+        delay(1_000_000);
+        off(5);
+        delay(1_000_000);
+    }
 
     loop {}
 }
