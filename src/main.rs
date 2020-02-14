@@ -36,9 +36,9 @@ fn delay(cycles: usize) {
 
 #[no_mangle]
 pub extern "C" fn main() {
-    let sim_scgc5 = 0x4004_8038 as *mut u32;
-
+    let portc_pcr4 = 0x4004_B010 as *mut u32;
     let portc_pcr5 = 0x4004_B014 as *mut u32;
+    let portc_pcr6 = 0x4004_B018 as *mut u32;
 
     let gpioc_pdor = 0x400F_F080 as *mut u32;
     let gpioc_psor = 0x400F_F084 as *mut u32;
@@ -50,10 +50,19 @@ pub extern "C" fn main() {
     }
 
     // mark port c, pin 5 as GPIO
+    // labeled as pin 13 on my board diagram
     unsafe {
         let mut value = ptr::read_volatile(portc_pcr5);
         value |= 1 << 8;
         ptr::write_volatile(portc_pcr5, value);
+    }
+
+    // mark port c, pin 6 as GPIO
+    // labeled as pin 11 on my board diagram
+    unsafe {
+        let mut value = ptr::read_volatile(portc_pcr6);
+        value |= 1 << 8;
+        ptr::write_volatile(portc_pcr6, value);
     }
 
     let output = |pin: u8| unsafe {
@@ -75,11 +84,14 @@ pub extern "C" fn main() {
     };
 
     output(5);
+    output(6);
 
     loop {
         on(5);
+        off(6);
         delay(1_000_000);
         off(5);
+        on(6);
         delay(1_000_000);
     }
 }
