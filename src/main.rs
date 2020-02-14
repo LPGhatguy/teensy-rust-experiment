@@ -49,6 +49,14 @@ pub extern "C" fn main() {
         sim::enable_port5_clock_gate();
     }
 
+    // mark port c, pin 4 as GPIO
+    // labeled as pin 10 on my board diagram
+    unsafe {
+        let mut value = ptr::read_volatile(portc_pcr4);
+        value |= 1 << 8;
+        ptr::write_volatile(portc_pcr4, value);
+    }
+
     // mark port c, pin 5 as GPIO
     // labeled as pin 13 on my board diagram
     unsafe {
@@ -83,13 +91,19 @@ pub extern "C" fn main() {
         ptr::write_volatile(gpioc_pdor, value & !mask);
     };
 
+    output(4);
     output(5);
     output(6);
 
     loop {
-        on(5);
         off(6);
+        on(4);
         delay(1_000_000);
+
+        off(4);
+        on(5);
+        delay(1_000_000);
+
         off(5);
         on(6);
         delay(1_000_000);
