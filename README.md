@@ -7,6 +7,7 @@ Things I want to do:
 - [ ] Two blinking LEDs (wow!)
 - [ ] Audio synthesis to speakers
 - [ ] An instrument like [Wintergatan's Modulin](https://www.youtube.com/watch?v=mFfe4ZRQOH8)
+	- [Potentiometer for this project](https://www.sparkfun.com/products/8681)
 
 ## Requirements
 - Teensy loader CLI
