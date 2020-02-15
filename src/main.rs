@@ -28,8 +28,6 @@ fn main() -> ! {
         c5.low();
         delay(500_000);
     }
-
-    loop {}
 }
 
 fn delay(cycles: usize) {
@@ -75,7 +73,7 @@ fn teensy_panic(_info: &PanicInfo) -> ! {
 
     output(5);
 
-    for i in 0..4 {
+    for _ in 0..4 {
         on(5);
         delay(500_000);
         off(5);
