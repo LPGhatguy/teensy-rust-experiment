@@ -43,6 +43,7 @@ pub extern "C" fn main() {
     let gpioc_pdor = 0x400F_F080 as *mut u32;
     let gpioc_psor = 0x400F_F084 as *mut u32;
     let gpioc_pddr = 0x400F_F094 as *mut u32;
+    let gpioc_pdir = 0x400F_F090 as *mut u32;
 
     unsafe {
         watchdog::disable();
@@ -79,6 +80,13 @@ pub extern "C" fn main() {
         ptr::write_volatile(gpioc_pddr, value | mask);
     };
 
+    let get = |pin: u8| -> bool {
+        unsafe {
+            let value = ptr::read_volatile(gpioc_pdir);
+            (value & (1 << pin)) != 0
+        }
+    };
+
     let on = |pin: u8| unsafe {
         let value = ptr::read_volatile(gpioc_pdor);
         let mask = 1 << pin;
@@ -91,21 +99,35 @@ pub extern "C" fn main() {
         ptr::write_volatile(gpioc_pdor, value & !mask);
     };
 
-    output(4);
     output(5);
-    output(6);
+
+    on(5);
+    delay(500_000);
+    off(5);
+    delay(500_000);
+
+    let mut last_value = false;
 
     loop {
-        off(6);
-        on(4);
-        delay(1_000_000);
+        let next_value = get(4);
 
-        off(4);
-        on(5);
-        delay(1_000_000);
+        if next_value != last_value {
+            if next_value {
+                on(5);
+                delay(500_000);
+                off(5);
+            } else {
+                on(5);
+                delay(300_000);
+                off(5);
+                delay(300_000);
+                on(5);
+                delay(300_000);
+                off(5);
+            }
+        }
 
-        off(5);
-        on(6);
-        delay(1_000_000);
+        last_value = next_value;
+        delay(50_000);
     }
 }
