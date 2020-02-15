@@ -88,7 +88,7 @@ impl Port {
 impl Drop for Port {
     fn drop(&mut self) {
         let index = self.name as u8 as usize;
-        // assert!(PORTS_TAKEN[index].swap(false, Ordering::Relaxed));
+        assert!(PORTS_TAKEN[index].swap(false, Ordering::Relaxed));
     }
 }
 
@@ -114,7 +114,7 @@ impl<'a> Pin<'a> {
 impl<'a> Drop for Pin<'a> {
     fn drop(&mut self) {
         let index = self.num as usize;
-        // assert!(self.port.pins_taken[index].swap(false, Ordering::Relaxed));
+        assert!(self.port.pins_taken[index].swap(false, Ordering::Relaxed));
     }
 }
 
