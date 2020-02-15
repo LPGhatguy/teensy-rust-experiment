@@ -16,8 +16,22 @@ SECTIONS
     } > FLASH = 0xFF
 
     .rodata : {
+        _rodata_start = .;
         *(.rodata*)
+        _rodata_end = .;
     } > FLASH
+
+    .bss : {
+         . = ORIGIN(RAM);
+         _bss_start = .;
+         *(.bss*)
+         _bss_end = .;
+    } > RAM
+
+    .data : {
+        _data_start = .;
+        *(.data*)
+    } > RAM
 
     _stack_top = ORIGIN(RAM) + LENGTH(RAM);
 
