@@ -1,5 +1,5 @@
 # Rust Experiment on Teensy 3.6
-Repository containing a bunch of random tinkering on the Teensy 3.6. I'm trying to learn electrical engineering and embedded system development by starting from scratch with a pure Rust application. Not very smart, right?
+Repository containing a bunch of random tinkering on the Teensy 3.6. I'm trying to learn electrical engineering and embedded system development by starting from scratch(-ish) with a pure Rust application. Not very smart, right?
 
 Things I want to do:
 

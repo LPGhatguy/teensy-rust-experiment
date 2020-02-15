@@ -5,3 +5,4 @@ authors = ["Lucien Greathouse <me@lpghatguy.com>"]
 edition = "2018"
 
 [dependencies]
+cortex-m-rt = "0.6.12"
