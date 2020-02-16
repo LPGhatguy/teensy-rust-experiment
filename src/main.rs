@@ -1,4 +1,4 @@
-#![feature(stdsimd)]
+#![feature(stdsimd, asm)]
 #![no_std]
 #![no_main]
 
@@ -6,7 +6,12 @@ mod port;
 mod sim;
 mod watchdog;
 
-use core::{arch::arm::__nop, panic::PanicInfo, ptr};
+use core::{
+    arch::arm::__nop,
+    panic::PanicInfo,
+    ptr,
+    sync::atomic::{self, Ordering},
+};
 
 use cortex_m_rt::entry;
 
@@ -20,16 +25,19 @@ fn main() -> ! {
     }
 
     let port_c = Port::take(PortName::C).unwrap();
-    let mut c5 = port_c.take_pin(5).unwrap().into_gpio().into_output();
+    let mut pin_c5 = port_c.take_pin(5).unwrap().into_gpio().into_output();
 
     loop {
-        c5.high();
-        delay(100_000);
-        c5.low();
-        delay(500_000);
+        for _ in 0..4 {
+            pin_c5.high();
+            delay(1_000_000);
+            pin_c5.low();
+            delay(5_000_000);
+        }
     }
 }
 
+// #[inline(never)]
 fn delay(cycles: usize) {
     unsafe {
         for _ in 0..cycles {
@@ -73,11 +81,11 @@ fn teensy_panic(_info: &PanicInfo) -> ! {
 
     output(5);
 
-    for _ in 0..4 {
+    for _ in 0..5 {
         on(5);
         delay(500_000);
         off(5);
-        delay(1_000_000);
+        delay(200_000);
     }
 
     loop {}

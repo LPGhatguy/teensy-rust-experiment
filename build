@@ -7,5 +7,5 @@ HEX=$OUTDIR/$BIN.HEX
 ELF=$OUTDIR/$BIN
 
 cargo build --release
-arm-none-eabi-objcopy -O ihex $ELF $HEX
+rust-objcopy -O ihex $ELF $HEX
 teensy_loader_cli -w -mmcu=mk66fx1m0 $HEX -v
