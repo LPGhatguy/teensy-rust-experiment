@@ -34,5 +34,7 @@ For example:
 
 Searching for this is confusing and was frustrating for trying to get my first few things connected correctly.
 
+**Solution:** I found a table of pins in the C support libraries for the Teensy 3.x. They're kind of all over the place: https://github.com/PaulStoffregen/cores/blob/5baf6a80546a3fc7a907fc1e3a59d7bd83926a89/teensy3/core_pins.h#L52-L90
+
 ## License
 This project is available under the MIT license. Details are available in [LICENSE.txt](LICENSE.txt) or <https://opensource.org/licenses/MIT>.
