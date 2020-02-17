@@ -2,7 +2,7 @@
 set -e
 
 BIN=teensy-rs
-OUTDIR=target/thumbv7em-none-eabi/release
+OUTDIR=target/thumbv7em-none-eabihf/release
 HEX=$OUTDIR/$BIN.HEX
 ELF=$OUTDIR/$BIN
 
