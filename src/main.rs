@@ -16,6 +16,7 @@ use core::{
 
 use cortex_m_rt::entry;
 
+use crate::mcg::Mcg;
 use crate::port::{GpioOutputPin, Port, PortName};
 
 #[entry]
@@ -27,6 +28,11 @@ fn main() -> ! {
 
     let port_c = Port::take(PortName::C).unwrap();
     let mut pin_c5 = port_c.take_pin(5).unwrap().into_gpio().into_output();
+
+    let mcg = Mcg::take().unwrap();
+
+    // current problem: everything hangs here
+    let mcg = mcg.into_fbe();
 
     pin_c5.high();
 

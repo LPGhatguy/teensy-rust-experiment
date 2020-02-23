@@ -6,3 +6,5 @@ edition = "2018"
 
 [dependencies]
 cortex-m-rt = "0.6.12"
+bitfield = "0.13.2"
+volatile = "0.2.6"

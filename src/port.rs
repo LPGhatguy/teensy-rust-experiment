@@ -6,6 +6,8 @@
 //!
 //! See the K66 Reference, Chapter 12 for details.
 
+#![allow(unused)]
+
 use core::{
     ptr,
     sync::atomic::{AtomicBool, Ordering},
