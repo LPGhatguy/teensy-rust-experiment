@@ -2,6 +2,7 @@
 #![no_std]
 #![no_main]
 
+mod mcg;
 mod port;
 mod sim;
 mod watchdog;
