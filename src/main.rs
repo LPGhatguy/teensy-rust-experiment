@@ -17,24 +17,6 @@ use cortex_m_rt::entry;
 
 use crate::port::{GpioOutputPin, Port, PortName};
 
-const C130_KINDA: usize = 10_000;
-
-/// Junky tone generator function
-fn tone_step(pin: &mut GpioOutputPin<'_>, tone: i32) {
-    let exp = 1.059463f32;
-
-    let mut multiplier = exp;
-    for _ in 0..(tone as u32) {
-        multiplier = multiplier * exp;
-    }
-    let duration = (C130_KINDA as f32 * multiplier) as usize;
-
-    pin.high();
-    delay(duration);
-    pin.low();
-    delay(duration);
-}
-
 #[entry]
 fn main() -> ! {
     unsafe {
@@ -42,31 +24,12 @@ fn main() -> ! {
         sim::enable_portc_clock_gate();
     }
 
-    // Assumes buttons are attached to C3 and C4, and a passive buzzer is
-    // attached to C6.
-
     let port_c = Port::take(PortName::C).unwrap();
-    let mut pin_c3 = port_c.take_pin(3).unwrap().into_gpio();
-    let mut pin_c4 = port_c.take_pin(4).unwrap().into_gpio();
-    let mut pin_c6 = port_c.take_pin(6).unwrap().into_gpio().into_output();
+    let mut pin_c5 = port_c.take_pin(5).unwrap().into_gpio().into_output();
 
-    pin_c6.low();
+    pin_c5.high();
 
-    loop {
-        let tone = if pin_c3.read() {
-            Some(0)
-        } else if pin_c4.read() {
-            Some(1)
-        } else {
-            None
-        };
-
-        if let Some(tone) = tone {
-            tone_step(&mut pin_c6, tone);
-        } else {
-            delay(100_000);
-        }
-    }
+    loop {}
 }
 
 #[inline(never)]

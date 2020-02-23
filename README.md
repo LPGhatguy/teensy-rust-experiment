@@ -13,7 +13,7 @@ Things I want to do:
 - Teensy loader CLI
 - arm-none-eabi target and binutils
 
-Run `./build` to build and deploy to a connected device.
+Run `./deploy.sh` to build and deploy to a connected device.
 
 ## Resources
 - [Teensy 3.6 Data Sheet](https://www.pjrc.com/teensy/K66P144M180SF5RMV2.pdf) (19 MB)
