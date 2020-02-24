@@ -2,6 +2,8 @@
 //!
 //! See chapter 28 for details.
 
+#![allow(unused)]
+
 use core::sync::atomic::{AtomicBool, Ordering};
 
 use bitfield::{Bit, BitRange};

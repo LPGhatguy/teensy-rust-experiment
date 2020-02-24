@@ -8,18 +8,14 @@ mod port;
 mod sim;
 mod watchdog;
 
-use core::{
-    arch::arm::__nop,
-    panic::PanicInfo,
-    ptr,
-    sync::atomic::{self, Ordering},
-};
+use core::{arch::arm::__nop, panic::PanicInfo, ptr};
 
 use cortex_m_rt::entry;
 
 use crate::mcg::Mcg;
 use crate::osc::Osc;
 use crate::port::{GpioOutputPin, Port, PortName};
+use crate::sim::Sim;
 
 #[entry]
 fn main() -> ! {
@@ -30,8 +26,10 @@ fn main() -> ! {
     let mut osc = Osc::take().unwrap();
     osc.enable(10);
 
+    let mut sim = Sim::take().unwrap();
     unsafe {
-        sim::enable_portc_clock_gate();
+        sim.enable_portc_clock_gate();
+        sim.set_clock_dividers(1, 1, 1, 2);
     }
 
     let mcg = Mcg::take().unwrap();
