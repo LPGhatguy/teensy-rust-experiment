@@ -7,10 +7,7 @@
 
 #![allow(unused)]
 
-use core::{
-    ptr,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use core::sync::atomic::{AtomicBool, Ordering};
 
 use bitfield::{Bit, BitRange};
 use volatile::{ReadOnly, ReadWrite, WriteOnly};
@@ -18,15 +15,6 @@ use volatile::{ReadOnly, ReadWrite, WriteOnly};
 static MCG_TAKEN: AtomicBool = AtomicBool::new(false);
 
 const MCG_BASE_ADDRESS: usize = 0x4006_4000;
-
-/// See section 27.1.1 for details here
-#[derive(Debug, Clone, Copy)]
-#[repr(u8)]
-enum ClockSource {
-    ExternalCrystal = 0b00,
-    ExternalRtc = 0b01,
-    Internal = 0b10,
-}
 
 pub struct Mcg<State> {
     data: *mut McgData,
@@ -50,6 +38,13 @@ impl Mcg<StateFei> {
 
 impl Mcg<StateFei> {
     pub fn into_fbe(self) -> Mcg<StateFbe> {
+        use crate::port::{Port, PortName};
+
+        let port_c = Port::take(PortName::C).unwrap();
+        let mut pin_c5 = port_c.take_pin(5).unwrap().into_gpio().into_output();
+        let mut pin_c6 = port_c.take_pin(6).unwrap().into_gpio().into_output();
+        let mut pin_c4 = port_c.take_pin(4).unwrap().into_gpio().into_output();
+
         unsafe {
             (*self.data).c2.update(|c2| {
                 // select "very high" frequency range
@@ -64,7 +59,7 @@ impl Mcg<StateFei> {
 
             (*self.data).c1.update(|c1| {
                 // select external reference clock as source for MCGOUTCLK
-                c1.set_bit_range(6, 7, 0b10);
+                c1.set_bit_range(6, 7, McgOutClkSource::ExternalRef as u8);
 
                 // set FLL reference divider to divide-by-512
                 //
@@ -76,11 +71,17 @@ impl Mcg<StateFei> {
                 c1.set_bit(2, false);
             });
 
+            pin_c5.high();
+
             // wait for crystal configured in c2 to be initialized
             while !(*self.data).s.read().bit(1) {}
 
+            pin_c4.high();
+
             // wait for FLL reference clock to be the external clock
             while (*self.data).s.read().bit(4) {}
+
+            pin_c6.high();
 
             // wait for external reference clock to be feeding MCGOUTCLK
             loop {
@@ -91,6 +92,8 @@ impl Mcg<StateFei> {
                     break;
                 }
             }
+
+            pin_c5.low();
         }
 
         Mcg {
@@ -143,6 +146,15 @@ pub struct StatePbe;
 /// PLL-bypassed external
 #[derive(Debug, Clone, Copy)]
 pub struct StatePee;
+
+/// From section 27.4.1, MCG_C1[CLKS]
+#[derive(Debug, Clone, Copy)]
+#[repr(u8)]
+enum McgOutClkSource {
+    FllOrPllcs = 0b00,
+    InternalRef = 0b01,
+    ExternalRef = 0b10,
+}
 
 #[repr(packed)]
 struct McgData {

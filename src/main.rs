@@ -3,6 +3,7 @@
 #![no_main]
 
 mod mcg;
+mod osc;
 mod port;
 mod sim;
 mod watchdog;
@@ -17,24 +18,26 @@ use core::{
 use cortex_m_rt::entry;
 
 use crate::mcg::Mcg;
+use crate::osc::Osc;
 use crate::port::{GpioOutputPin, Port, PortName};
 
 #[entry]
 fn main() -> ! {
     unsafe {
         watchdog::disable();
-        sim::enable_portc_clock_gate();
     }
 
-    let port_c = Port::take(PortName::C).unwrap();
-    let mut pin_c5 = port_c.take_pin(5).unwrap().into_gpio().into_output();
+    let mut osc = Osc::take().unwrap();
+    osc.enable(10);
+
+    unsafe {
+        sim::enable_portc_clock_gate();
+    }
 
     let mcg = Mcg::take().unwrap();
 
     // current problem: everything hangs here
     let mcg = mcg.into_fbe();
-
-    pin_c5.high();
 
     loop {}
 }
