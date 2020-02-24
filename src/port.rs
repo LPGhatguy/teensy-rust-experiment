@@ -87,13 +87,6 @@ impl Port {
     }
 }
 
-impl Drop for Port {
-    fn drop(&mut self) {
-        let index = self.name as u8 as usize;
-        assert!(PORTS_TAKEN[index].swap(false, Ordering::Relaxed));
-    }
-}
-
 pub struct Pin<'a> {
     port: &'a Port,
     num: u8,
@@ -110,13 +103,6 @@ impl<'a> Pin<'a> {
         }
 
         GpioInputPin { pin: self }
-    }
-}
-
-impl<'a> Drop for Pin<'a> {
-    fn drop(&mut self) {
-        let index = self.num as usize;
-        assert!(self.port.pins_taken[index].swap(false, Ordering::Relaxed));
     }
 }
 

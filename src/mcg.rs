@@ -115,14 +115,6 @@ impl Mcg<StatePbe> {
     }
 }
 
-impl<State> Drop for Mcg<State> {
-    fn drop(&mut self) {
-        // TODO: Reset to FEI state
-
-        assert!(MCG_TAKEN.swap(false, Ordering::Relaxed));
-    }
-}
-
 /// FLL-engaged internal
 #[derive(Debug, Clone, Copy)]
 pub struct StateFei;
