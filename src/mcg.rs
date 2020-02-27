@@ -29,6 +29,7 @@ impl Mcg<StateFei> {
         }
 
         let data = MCG_BASE_ADDRESS as *mut McgData;
+
         Some(Mcg {
             data,
             state: StateFei,

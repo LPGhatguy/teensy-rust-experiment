@@ -34,11 +34,10 @@ impl Sim {
         Some(Sim { data0, data1 })
     }
 
-    pub unsafe fn set_clock_dividers(&mut self, system: u8, bus: u8, flex_bus: u8, flash: u8) {
+    pub unsafe fn set_clock_dividers(&mut self, system: u8, bus: u8, flash: u8) {
         (*self.data1).clkdiv1.update(|value| {
             value.set_bit_range(28, 31, system - 1);
             value.set_bit_range(24, 27, bus - 1);
-            value.set_bit_range(20, 23, flex_bus - 1);
             value.set_bit_range(16, 19, flash - 1);
         });
     }

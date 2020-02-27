@@ -29,7 +29,7 @@ fn main() -> ! {
     let mut sim = Sim::take().unwrap();
     unsafe {
         sim.enable_portc_clock_gate();
-        sim.set_clock_dividers(1, 1, 1, 2);
+        sim.set_clock_dividers(1, 2, 3);
     }
 
     let mcg = Mcg::take().unwrap();
